@@ -22,3 +22,16 @@ class AirplaneTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirplaneType
         fields = "__all__"
+
+
+class AirplaneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Airplane
+        fields = "__all__"
+
+
+class AirplaneListSerializer(serializers.ModelSerializer):
+    airplane_type = serializers.CharField(read_only=True, source="airplane_type.name")
+    class Meta:
+        model = Airplane
+        fields = ("id", "name", "rows", "seats_in_row", "airplane_type")
