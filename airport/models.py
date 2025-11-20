@@ -15,8 +15,12 @@ class Airport(models.Model):
 
 
 class Route(models.Model):
-    source = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="sources")
-    destination = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="destinations")
+    source = models.ForeignKey(
+        Airport, on_delete=models.CASCADE, related_name="sources"
+    )
+    destination = models.ForeignKey(
+        Airport, on_delete=models.CASCADE, related_name="destinations"
+    )
     distance = models.IntegerField()
 
     class Meta:
@@ -37,7 +41,9 @@ class Airplane(models.Model):
     name = models.CharField(max_length=63)
     rows = models.IntegerField()
     seats_in_row = models.IntegerField()
-    airplane_type = models.ForeignKey(AirplaneType, on_delete=models.CASCADE, related_name="airplanes")
+    airplane_type = models.ForeignKey(
+        AirplaneType, on_delete=models.CASCADE, related_name="airplanes"
+    )
 
     @property
     def capacity(self):
@@ -49,7 +55,9 @@ class Airplane(models.Model):
 
 class Flight(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="flights")
-    airplane = models.ForeignKey(Airplane, on_delete=models.CASCADE, related_name="flights")
+    airplane = models.ForeignKey(
+        Airplane, on_delete=models.CASCADE, related_name="flights"
+    )
     departure_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
 
@@ -57,9 +65,11 @@ class Flight(models.Model):
         ordering = ["-departure_time"]
 
     def __str__(self):
-        return (f"{self.route} -> {self.airplane}"
-                f"departure time: {self.departure_time}"
-                f"arrival time: {self.arrival_time}")
+        return (
+            f"{self.route} -> {self.airplane}"
+            f"departure time: {self.departure_time}"
+            f"arrival time: {self.arrival_time}"
+        )
 
 
 class Crew(models.Model):
@@ -79,18 +89,18 @@ class Ticket(models.Model):
 
     @staticmethod
     def validate_ticket(row, seat, airplane, error_to_raise):
-        for ticket_attr_value, ticket_attr_name, airplane_attr_name in[
+        for ticket_attr_value, ticket_attr_name, airplane_attr_name in [
             (row, "row", "rows"),
             (seat, "seat", "seats_in_row"),
         ]:
             count_attrs = getattr(airplane, airplane_attr_name)
             if not (1 <= ticket_attr_value <= count_attrs):
-                raise error_to_raise (
+                raise error_to_raise(
                     {
                         ticket_attr_name: f"{ticket_attr_name} "
-                                          f"number must be in available range: "
-                                          f"(1, {airplane_attr_name}): "
-                                          f"(1, {count_attrs})"
+                        f"number must be in available range: "
+                        f"(1, {airplane_attr_name}): "
+                        f"(1, {count_attrs})"
                     }
                 )
 
@@ -99,15 +109,15 @@ class Ticket(models.Model):
             row=self.row,
             seat=self.seat,
             airplane=self.flight.airplane,
-            error_to_raise=ValidationError
+            error_to_raise=ValidationError,
         )
 
     def save(
-            self,
-            force_insert=False,
-            force_update=False,
-            using=None,
-            update_fields=None,
+        self,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
     ):
         self.full_clean()
         return super(Ticket, self).save(
