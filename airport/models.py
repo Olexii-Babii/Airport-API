@@ -29,6 +29,10 @@ class Route(models.Model):
     def __str__(self):
         return f"{self.source} -> {self.destination}"
 
+    @property
+    def course(self):
+        return f"{self.source} -> {self.destination}"
+
 
 class AirplaneType(models.Model):
     name = models.CharField(max_length=63, unique=True)
@@ -66,8 +70,8 @@ class Flight(models.Model):
 
     def __str__(self):
         return (
-            f"{self.route} -> {self.airplane}"
-            f"departure time: {self.departure_time}"
+            f"{self.route} "
+            f"departure time: {self.departure_time} "
             f"arrival time: {self.arrival_time}"
         )
 

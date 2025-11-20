@@ -96,3 +96,21 @@ class FlightDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
         fields = "__all__"
+
+
+class CrewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Crew
+        fields = "__all__"
+
+
+class CrewListSerializer(serializers.ModelSerializer):
+    flights = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field="route.course",
+    )
+
+    class Meta:
+        model = Crew
+        fields = ("id", "first_name", "last_name", "flights")
