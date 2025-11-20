@@ -1,3 +1,4 @@
+from django.db.models import Count, F
 from django.shortcuts import render
 from rest_framework import viewsets
 
@@ -17,6 +18,7 @@ from airport.serializers import (
     AirportSerializer,
     AirplaneTypeSerializer,
     AirplaneSerializer, AirplaneListSerializer, RouteSerializer, RouteListSerializer, RouteDetailSerializer,
+    FlightSerializer, FlightListSerializer, FlightDetailSerializer,
 )
 
 
@@ -49,3 +51,20 @@ class RouteViewSet(viewsets.ModelViewSet):
             return RouteDetailSerializer
         return RouteSerializer
 
+
+class FlightViewSet(viewsets.ModelViewSet):
+    queryset = Flight.objects.all()
+
+    def get_queryset(self):
+        if self.action == "list":
+            queryset = self.queryset.select_related("airplane").annotate(
+                available_seats=(F("airplane__rows") * F("airplane__seats_in_row")) - Count("tickets")).order_by("id")
+            return queryset
+        return self.queryset
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return FlightListSerializer
+        if self.action == "retrieve":
+            return FlightDetailSerializer
+        return FlightSerializer

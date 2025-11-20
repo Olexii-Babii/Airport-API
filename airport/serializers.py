@@ -66,3 +66,33 @@ class RouteDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Route
         fields = "__all__"
+
+
+class FlightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Flight
+        fields = "__all__"
+
+
+class FlightListSerializer(serializers.ModelSerializer):
+    route = serializers.StringRelatedField(read_only=True, many=False)
+    airplane = serializers.StringRelatedField(read_only=True, many=False)
+    available_seats = serializers.IntegerField(read_only=True)
+    class Meta:
+        model = Flight
+        fields = "__all__"
+
+
+class FlightDetailSerializer(serializers.ModelSerializer):
+    route = RouteDetailSerializer(read_only=True)
+    airplane = AirplaneListSerializer(read_only=True)
+    taken_seats = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field="seat",
+        source="tickets"
+    )
+
+    class Meta:
+        model = Flight
+        fields = "__all__"
