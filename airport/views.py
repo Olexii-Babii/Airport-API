@@ -18,7 +18,8 @@ from airport.serializers import (
     AirportSerializer,
     AirplaneTypeSerializer,
     AirplaneSerializer, AirplaneListSerializer, RouteSerializer, RouteListSerializer, RouteDetailSerializer,
-    FlightSerializer, FlightListSerializer, FlightDetailSerializer, CrewSerializer, CrewListSerializer,
+    FlightSerializer, FlightListSerializer, FlightDetailSerializer, CrewSerializer, CrewListSerializer, OrderSerializer,
+    OrderListSerializer,
 )
 
 
@@ -78,3 +79,18 @@ class CrewViewSet(viewsets.ModelViewSet):
         if self.action in ("list", "retrieve"):
             return CrewListSerializer
         return CrewSerializer
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return OrderListSerializer
+        return OrderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
