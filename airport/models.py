@@ -27,7 +27,8 @@ class Route(models.Model):
         ordering = ["source", "destination"]
 
     def __str__(self):
-        return f"{self.source} -> {self.destination}"
+        return (f"{self.source}({self.source.closest_big_city}) "
+                f"-> {self.destination}({self.destination.closest_big_city}) ")
 
     @property
     def course(self):

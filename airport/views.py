@@ -1,5 +1,4 @@
-from django.db.models import Count, F
-from django.shortcuts import render
+from django.db.models import Count, F, Q
 from rest_framework import viewsets
 
 from airport.models import (
@@ -10,15 +9,23 @@ from airport.models import (
     Route,
     Flight,
     Order,
-    Ticket
 )
 
 
 from airport.serializers import (
     AirportSerializer,
     AirplaneTypeSerializer,
-    AirplaneSerializer, AirplaneListSerializer, RouteSerializer, RouteListSerializer, RouteDetailSerializer,
-    FlightSerializer, FlightListSerializer, FlightDetailSerializer, CrewSerializer, CrewListSerializer, OrderSerializer,
+    AirplaneSerializer,
+    AirplaneListSerializer,
+    RouteSerializer,
+    RouteListSerializer,
+    RouteDetailSerializer,
+    FlightSerializer,
+    FlightListSerializer,
+    FlightDetailSerializer,
+    CrewSerializer,
+    CrewListSerializer,
+    OrderSerializer,
     OrderListSerializer,
 )
 
@@ -57,11 +64,34 @@ class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.all()
 
     def get_queryset(self):
+        queryset = self.queryset
+
+        source = self.request.query_params.get("source")
+        destination = self.request.query_params.get("destination")
+        departure_time = self.request.query_params.get("departure_time")
+        arrival_time = self.request.query_params.get("arrival_time")
+
+        if source:
+            queryset = queryset.filter(
+                Q(route__source__name__icontains=source) |
+                Q(route__source__closest_big_city__icontains=source))
+
+        if destination:
+            queryset = queryset.filter(
+                Q(route__destination__name__icontains=destination) |
+                Q(route__destination__closest_big_city__icontains=destination))
+
+        if departure_time:
+            queryset = queryset.filter(departure_time__date=departure_time)
+
+        if arrival_time:
+            queryset = queryset.filter(arrival_time__date=arrival_time)
+
         if self.action == "list":
-            queryset = self.queryset.select_related("airplane").annotate(
+            queryset = queryset.select_related("airplane").annotate(
                 available_seats=(F("airplane__rows") * F("airplane__seats_in_row")) - Count("tickets")).order_by("id")
             return queryset
-        return self.queryset
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
