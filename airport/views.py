@@ -1,4 +1,4 @@
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Prefetch
 from rest_framework import viewsets
 
 from airport.models import (
@@ -8,7 +8,7 @@ from airport.models import (
     Crew,
     Route,
     Flight,
-    Order,
+    Order, Ticket,
 )
 
 
@@ -41,7 +41,7 @@ class AirplaneTypeViewSet(viewsets.ModelViewSet):
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
-    queryset = Airplane.objects.all()
+    queryset = Airplane.objects.select_related("airplane_type")
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -50,7 +50,7 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 
 
 class RouteViewSet(viewsets.ModelViewSet):
-    queryset = Route.objects.all()
+    queryset = Route.objects.select_related("source", "destination")
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -61,7 +61,12 @@ class RouteViewSet(viewsets.ModelViewSet):
 
 
 class FlightViewSet(viewsets.ModelViewSet):
-    queryset = Flight.objects.all()
+    queryset = Flight.objects.select_related(
+        "route",
+        "route__source",
+        "route__destination",
+        "airplane",
+        "airplane__airplane_type")
 
     def get_queryset(self):
         queryset = self.queryset
@@ -88,9 +93,8 @@ class FlightViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(arrival_time__date=arrival_time)
 
         if self.action == "list":
-            queryset = queryset.select_related("airplane").annotate(
+            queryset = queryset.annotate(
                 available_seats=(F("airplane__rows") * F("airplane__seats_in_row")) - Count("tickets")).order_by("id")
-            return queryset
         return queryset
 
     def get_serializer_class(self):
@@ -102,7 +106,15 @@ class FlightViewSet(viewsets.ModelViewSet):
 
 
 class CrewViewSet(viewsets.ModelViewSet):
-    queryset = Crew.objects.all()
+    queryset = Crew.objects.prefetch_related(
+        Prefetch(
+            "flights",
+            queryset=Flight.objects.select_related(
+                "route__source",
+                "route__destination"
+            )
+        )
+    )
     serializer_class = CrewSerializer
 
     def get_serializer_class(self):
@@ -112,7 +124,15 @@ class CrewViewSet(viewsets.ModelViewSet):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
+    queryset = Order.objects.prefetch_related(
+        Prefetch(
+            "tickets",
+            queryset=Ticket.objects.select_related(
+                "flight__route__destination",
+                "flight__route__source"
+            )
+        )
+    )
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)

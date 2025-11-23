@@ -27,12 +27,12 @@ class Route(models.Model):
         ordering = ["source", "destination"]
 
     def __str__(self):
-        return (f"{self.source}({self.source.closest_big_city}) "
-                f"-> {self.destination}({self.destination.closest_big_city}) ")
+        return (f"{self.source.name}({self.source.closest_big_city}) "
+                f"-> {self.destination.name}({self.destination.closest_big_city}) ")
 
     @property
     def course(self):
-        return f"{self.source} -> {self.destination}"
+        return f"{self.source.closest_big_city} -> {self.destination.closest_big_city}"
 
 
 class AirplaneType(models.Model):
@@ -55,7 +55,7 @@ class Airplane(models.Model):
         return self.rows * self.seats_in_row
 
     def __str__(self):
-        return f"Name: {self.name}, type: {self.airplane_type}"
+        return f"Name: {self.name}, type: {self.airplane_type.name}"
 
 
 class Flight(models.Model):
@@ -71,7 +71,7 @@ class Flight(models.Model):
 
     def __str__(self):
         return (
-            f"{self.route} "
+            f"{self.route.source.closest_big_city} -> {self.route.destination.closest_big_city} "
             f"departure time: {self.departure_time} "
             f"arrival time: {self.arrival_time}"
         )

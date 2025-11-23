@@ -70,6 +70,12 @@ class RouteDetailSerializer(serializers.ModelSerializer):
 
 
 class FlightSerializer(serializers.ModelSerializer):
+    route = serializers.PrimaryKeyRelatedField(
+        queryset=Route.objects.select_related("source", "destination")
+    )
+    airplane = serializers.PrimaryKeyRelatedField(
+        queryset=Airplane.objects.select_related("airplane_type")
+    )
     class Meta:
         model = Flight
         fields = "__all__"
@@ -100,6 +106,12 @@ class FlightDetailSerializer(serializers.ModelSerializer):
 
 
 class CrewSerializer(serializers.ModelSerializer):
+    flights = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Flight.objects.select_related(
+            "route__source",
+            "route__destination"
+        ))
     class Meta:
         model = Crew
         fields = "__all__"
