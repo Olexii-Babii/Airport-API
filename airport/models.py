@@ -1,5 +1,9 @@
+import os.path
+import uuid
+
 from django.conf import settings
 from django.db import models
+from django.utils.text import slugify
 from rest_framework.exceptions import ValidationError
 
 
@@ -41,6 +45,12 @@ class AirplaneType(models.Model):
     def __str__(self):
         return self.name
 
+def upload_images(instance: "Airplane", filename):
+    _, extension = os.path.splitext(filename)
+    return os.path.join(
+        "uploads/images/",
+        f"{slugify({instance.name})}-{uuid.uuid4()}{extension}",
+    )
 
 class Airplane(models.Model):
     name = models.CharField(max_length=63)
@@ -48,6 +58,10 @@ class Airplane(models.Model):
     seats_in_row = models.IntegerField()
     airplane_type = models.ForeignKey(
         AirplaneType, on_delete=models.CASCADE, related_name="airplanes"
+    )
+    image = models.ImageField(
+        null=True,
+        upload_to=upload_images
     )
 
     @property
