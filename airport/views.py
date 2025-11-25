@@ -1,6 +1,6 @@
-from gc import get_objects
-
-from rest_framework.decorators import action, permission_classes
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework.decorators import action
 from django.db.models import Count, F, Q, Prefetch
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAdminUser
@@ -125,6 +125,38 @@ class FlightViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             return FlightDetailSerializer
         return FlightSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "source",
+                type=str,
+                description="Source parameter",
+                required=False,
+            ),
+            OpenApiParameter(
+                "destination",
+                type=str,
+                description="Destination parameter",
+                required=False,
+            ),
+            OpenApiParameter(
+                "departure_time",
+                type=OpenApiTypes.DATE,
+                description="Departure time parameter",
+                required=False,
+            ),
+            OpenApiParameter(
+                "arrival_time",
+                type=OpenApiTypes.DATE,
+                description="Arrival time parameter",
+                required=False,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        '''You can filter queryset by source, destination, departure and arrival time'''
+        return super().list(request, *args, **kwargs)
 
 
 class CrewViewSet(viewsets.ModelViewSet):
