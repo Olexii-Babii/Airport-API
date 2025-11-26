@@ -2,9 +2,10 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from django.db.models import Count, F, Q, Prefetch
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from airport.models import (
     Airport,
@@ -30,21 +31,35 @@ from airport.serializers import (
     CrewSerializer,
     CrewListSerializer,
     OrderSerializer,
-    OrderListSerializer, AirplaneImageSerializer,
+    OrderListSerializer,
+    AirplaneImageSerializer,
 )
 
 
-class AirportViewSet(viewsets.ModelViewSet):
+class AirportViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
 
 
-class AirplaneTypeViewSet(viewsets.ModelViewSet):
+class AirplaneTypeViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin
+):
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
 
 
-class AirplaneViewSet(viewsets.ModelViewSet):
+class AirplaneViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+):
     queryset = Airplane.objects.select_related("airplane_type")
 
     @action(
@@ -70,7 +85,12 @@ class AirplaneViewSet(viewsets.ModelViewSet):
         return AirplaneSerializer
 
 
-class RouteViewSet(viewsets.ModelViewSet):
+class RouteViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin
+):
     queryset = Route.objects.select_related("source", "destination")
 
 
@@ -159,7 +179,11 @@ class FlightViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class CrewViewSet(viewsets.ModelViewSet):
+class CrewViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin
+):
     queryset = Crew.objects.prefetch_related(
         Prefetch(
             "flights",
@@ -178,7 +202,12 @@ class CrewViewSet(viewsets.ModelViewSet):
         return CrewSerializer
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+):
     queryset = Order.objects.prefetch_related(
         Prefetch(
             "tickets",
