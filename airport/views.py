@@ -3,7 +3,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from django.db.models import Count, F, Q, Prefetch
 from rest_framework import viewsets, status, mixins
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -217,7 +217,7 @@ class OrderViewSet(
             )
         )
     )
-
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
