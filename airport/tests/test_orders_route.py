@@ -4,8 +4,17 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from airport.models import AirplaneType, Airplane, Route, Airport, Flight, Crew, Order
-from airport.serializers import CrewListSerializer, OrderListSerializer
+from airport.models import (
+    AirplaneType,
+    Airplane,
+    Route,
+    Airport,
+    Flight,
+    Crew,
+    Order,
+    Ticket
+)
+from airport.serializers import OrderListSerializer
 
 ORDER_URL = reverse("airport:order-list")
 
@@ -138,7 +147,7 @@ class AuthenticatedUserOrderTestCase(TestCase):
             email="mockuser@gmail.com",
             password="mock1234"
         )
-        Order.objects.create(user=self.user)
+        self.order = Order.objects.create(user=self.user)
         Order.objects.create(user=self.mock_user)
         self.flight = sample_flight(
             airplane_type="Order type"
@@ -164,6 +173,38 @@ class AuthenticatedUserOrderTestCase(TestCase):
         }
         response = self.client.post(ORDER_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_order_with_bought_ticket(self):
+        Ticket.objects.create(
+            row=1,
+            seat=1,
+            flight=self.flight,
+            order=self.order
+        )
+        data = {
+            "tickets": [
+                {
+                    "row": 1,
+                    "seat": 1,
+                    "flight": self.flight.id
+                },
+            ]
+        }
+        response = self.client.post(ORDER_URL, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_order_with_ticket_with_no_valid_data(self):
+        data = {
+            "tickets": [
+                {
+                    "row": 999,
+                    "seat": 999,
+                    "flight": self.flight.id
+                },
+            ]
+        }
+        response = self.client.post(ORDER_URL, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_authenticated_retrieve_order(self):
         response = self.client.get(reverse("airport:order-detail", kwargs={"pk" : 1}))
