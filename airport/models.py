@@ -31,8 +31,10 @@ class Route(models.Model):
         ordering = ["source", "destination"]
 
     def __str__(self):
-        return (f"{self.source.name}({self.source.closest_big_city}) "
-                f"-> {self.destination.name}({self.destination.closest_big_city}) ")
+        return (
+            f"{self.source.name}({self.source.closest_big_city}) "
+            f"-> {self.destination.name}({self.destination.closest_big_city}) "
+        )
 
     @property
     def course(self):
@@ -45,12 +47,14 @@ class AirplaneType(models.Model):
     def __str__(self):
         return self.name
 
+
 def upload_images(instance: "Airplane", filename):
     _, extension = os.path.splitext(filename)
     return os.path.join(
         "uploads/images/",
         f"{slugify({instance.name})}-{uuid.uuid4()}{extension}",
     )
+
 
 class Airplane(models.Model):
     name = models.CharField(max_length=63)
@@ -59,10 +63,7 @@ class Airplane(models.Model):
     airplane_type = models.ForeignKey(
         AirplaneType, on_delete=models.CASCADE, related_name="airplanes"
     )
-    image = models.ImageField(
-        null=True,
-        upload_to=upload_images
-    )
+    image = models.ImageField(null=True, upload_to=upload_images)
 
     @property
     def capacity(self):

@@ -9,22 +9,20 @@ from airport.serializers import AirplaneTypeSerializer
 
 AIRPLANE_TYPE_URL = reverse("airport:airplanetype-list")
 
+
 def sample_airplane_type(**params):
-    default = {
-        "name" : "test airplane type"
-    }
+    default = {"name": "test airplane type"}
     default.update(params)
     return AirplaneType.objects.create(**default)
+
 
 class UnauthenticatedUserAirplaneTypeTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-
     def test_unauthenticated_airplane_type_list(self):
         response = self.client.get(AIRPLANE_TYPE_URL)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
 
     def test_unauthenticated_create_airplane_type(self):
         data = {"name": "test airplane type"}
@@ -36,8 +34,7 @@ class AuthenticatedUserAirplaneTypeTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            email="test@gmail.com",
-            password="test1234"
+            email="test@gmail.com", password="test1234"
         )
         self.client.force_authenticate(self.user)
 
@@ -60,8 +57,7 @@ class AdminUserAirplaneTypeTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_superuser(
-            email="test@gmail.com",
-            password="test1234"
+            email="test@gmail.com", password="test1234"
         )
         self.client.force_authenticate(self.user)
 

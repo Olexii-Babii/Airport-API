@@ -14,7 +14,8 @@ from airport.models import (
     Crew,
     Route,
     Flight,
-    Order, Ticket,
+    Order,
+    Ticket,
 )
 
 from airport.serializers import (
@@ -46,9 +47,7 @@ class AirportViewSet(
 
 
 class AirplaneTypeViewSet(
-    GenericViewSet,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin
+    GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin
 ):
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
@@ -66,7 +65,7 @@ class AirplaneViewSet(
         methods=["POST"],
         detail=True,
         permission_classes=[IsAdminUser],
-        url_path ="upload-image"
+        url_path="upload-image",
     )
     def upload_image(self, request, pk=None):
         airplane = self.get_object()
@@ -75,7 +74,6 @@ class AirplaneViewSet(
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -89,10 +87,9 @@ class RouteViewSet(
     GenericViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin
+    mixins.RetrieveModelMixin,
 ):
     queryset = Route.objects.select_related("source", "destination")
-
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -108,7 +105,8 @@ class FlightViewSet(viewsets.ModelViewSet):
         "route__source",
         "route__destination",
         "airplane",
-        "airplane__airplane_type")
+        "airplane__airplane_type",
+    )
 
     def get_queryset(self):
         queryset = self.queryset
@@ -120,13 +118,15 @@ class FlightViewSet(viewsets.ModelViewSet):
 
         if source:
             queryset = queryset.filter(
-                Q(route__source__name__icontains=source) |
-                Q(route__source__closest_big_city__icontains=source))
+                Q(route__source__name__icontains=source)
+                | Q(route__source__closest_big_city__icontains=source)
+            )
 
         if destination:
             queryset = queryset.filter(
-                Q(route__destination__name__icontains=destination) |
-                Q(route__destination__closest_big_city__icontains=destination))
+                Q(route__destination__name__icontains=destination)
+                | Q(route__destination__closest_big_city__icontains=destination)
+            )
 
         if departure_time:
             queryset = queryset.filter(departure_time__date=departure_time)
@@ -136,7 +136,9 @@ class FlightViewSet(viewsets.ModelViewSet):
 
         if self.action == "list":
             queryset = queryset.annotate(
-                available_seats=(F("airplane__rows") * F("airplane__seats_in_row")) - Count("tickets")).order_by("id")
+                available_seats=(F("airplane__rows") * F("airplane__seats_in_row"))
+                - Count("tickets")
+            ).order_by("id")
         return queryset
 
     def get_serializer_class(self):
@@ -175,26 +177,21 @@ class FlightViewSet(viewsets.ModelViewSet):
         ]
     )
     def list(self, request, *args, **kwargs):
-        '''You can filter queryset by source, destination, departure and arrival time'''
+        """You can filter queryset by source,
+        destination, departure and arrival time"""
         return super().list(request, *args, **kwargs)
 
 
-class CrewViewSet(
-    GenericViewSet,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin
-):
+class CrewViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin):
     queryset = Crew.objects.prefetch_related(
         Prefetch(
             "flights",
             queryset=Flight.objects.select_related(
-                "route__source",
-                "route__destination"
-            )
+                "route__source", "route__destination"
+            ),
         )
     )
     serializer_class = CrewSerializer
-
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -212,12 +209,11 @@ class OrderViewSet(
         Prefetch(
             "tickets",
             queryset=Ticket.objects.select_related(
-                "flight__route__destination",
-                "flight__route__source"
-            )
+                "flight__route__destination", "flight__route__source"
+            ),
         )
     )
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
