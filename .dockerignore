@@ -1,0 +1,10 @@
+db.sqlite3
+README.md
+user/tests
+airport/tests
+.venv
+.idea
+media
+**__pycache__/
+Dockerfile
+docker-compose.yaml
